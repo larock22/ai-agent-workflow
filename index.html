@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent Workflow — Mermaid Map</title>
+<style>
+  :root{--bg:#0e1116;--ink:#e6edf3;--muted:#9aa4b2;--line:#2a323d;--panel:#161b22}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  header{padding:28px 32px 8px}
+  h1{margin:0 0 4px;font-size:26px}
+  header p{margin:0;color:var(--muted)}
+  .controls{padding:12px 32px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .controls button{background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    padding:8px 14px;border-radius:9px;cursor:pointer;font-size:14px}
+  .controls button:hover{border-color:var(--muted)}
+  .controls span{color:var(--muted);font-size:13px}
+  .stage{padding:8px 32px 40px;overflow:auto}
+  .mermaid{background:transparent}
+  /* legend */
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:0 32px 8px;color:var(--muted);font-size:13px}
+  .legend b{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header>
+  <h1>The complete map — AI agent workflow</h1>
+  <p>Five phases, from mapping the code to closing the flywheel. Rendered as a Mermaid flowchart.</p>
+</header>
+
+<div class="legend">
+  <span><b style="background:#2f6f9f"></b>Research</span>
+  <span><b style="background:#c08a2b"></b>Grill &amp; Align</span>
+  <span><b style="background:#6b4fb0"></b>Plan</span>
+  <span><b style="background:#1f7a6b"></b>Execute</span>
+  <span><b style="background:#5b6470"></b>Journal</span>
+  <span><b style="background:#e5534b"></b>Guardrail / stop</span>
+  <span><b style="background:#3fb950"></b>Check / pass</span>
+</div>
+
+<div class="controls">
+  <button id="zin">Zoom +</button>
+  <button id="zout">Zoom −</button>
+  <button id="zreset">Reset</button>
+  <span>Scroll to pan · zoom to read the small boxes</span>
+</div>
+
+<div class="stage">
+<pre class="mermaid" id="diagram">
+flowchart TD
+
+%% ---------- PHASE 1 ----------
+subgraph P1["PHASE 1 · RESEARCH — map the thing before you touch it"]
+  direction TB
+  brief["Brief the agent:<br/>just the map of X<br/><i>(X = thing being changed)</i>"]
+  dontask["Don't ask for solutions"]
+  readcode["Docs suck? Don't read them —<br/>read the code"]
+  brief --> dontask --> readcode
+  readcode --> artifact["Research artifact"]
+  artifact --> contains{{"Must contain"}}
+  contains --> subj["Subject of the map<br/>e.g. the auth module"]
+  contains --> callers["Callers — who actually<br/>calls the fns / classes / APIs"]
+  contains --> docs["Docs — exist? accurate?<br/>last updated when?"]
+  contains --> rel["Relationships"]
+  contains --> notes["Notes — interesting / off"]
+  contains --> sa1["Static analysis"]
+end
+
+%% ---------- PHASE 2 ----------
+subgraph P2["PHASE 2 · GRILL &amp; ALIGN — agree on goal and difficulty"]
+  direction TB
+  nom["Nomenclature:<br/>everyone agrees on the<br/>name of stuff"]
+  hard{"How hard<br/>is the task?"}
+  simple["Simple<br/>e.g. button colour<br/>→ no need to grill"]
+  grill["Hard → Grill me"]
+  onesentence["Define the goal<br/>in ONE sentence"]
+  align["Alignment:<br/>you + agent agree<br/>on direction"]
+  nom --> hard
+  hard -->|simple| simple
+  hard -->|hard| grill
+  simple --> align
+  grill --> onesentence --> align
+end
+
+%% ---------- PHASE 3 ----------
+subgraph P3["PHASE 3 · PLAN — turn the map into a safe plan"]
+  direction TB
+  risk["RISK / blast radius<br/>more touches = more risk"]
+  br["Blast radius"]
+  fr["Failure radius"]
+  untested["Untested code"]
+  ssot["Conflicting SSOTs"]
+  limit["Limit the damage"]
+  risk --> br & fr & untested & ssot --> limit
+
+  guard["GUARDRAILS —<br/>hard rules of what NOT to do"]
+  g1["Do not change<br/>downstream callers"]
+  g2["Do not introduce<br/>new APIs / classes"]
+  g3["Do not make new files"]
+  g4["Do not keep growing<br/>the single god file"]
+  gstop(["If a check fails — STOP"])
+  guard --> g1 & g2 & g3 & g4 --> gstop
+
+  checks["DETERMINISTIC hard checks / gates"]
+  c1["Tests"]
+  c2["Linters"]
+  c3["AST / grep"]
+  c4["Static analysis"]
+  checks --> c1 & c2 & c3 & c4
+
+  tickets["TICKETS — can a junior execute<br/>from ONLY this document?"]
+  t1["Ticket 1"]
+  t2["Ticket 2"]
+  t3["Ticket 3"]
+  tickets --> t1 --> t2 --> t3
+end
+
+%% ---------- PHASE 4 ----------
+subgraph P4["PHASE 4 · EXECUTE — one ticket at a time, gated"]
+  direction TB
+  take["Take ticket 1"]
+  try["Let the agent try"]
+  run["Run checks"]
+  failed{"Failed?"}
+  pass["Pass → next ticket"]
+  retry["Retry — but STOP if it breaks<br/>repeatedly or hits a<br/>complete non-negotiable"]
+  take --> try --> run --> failed
+  failed -->|no| pass
+  failed -->|yes| retry
+end
+
+%% ---------- PHASE 5 ----------
+subgraph P5["PHASE 5 · JOURNAL / LEDGER OF WORK"]
+  direction TB
+  fail2["Failure — logged, not hidden"]
+  attempts["Multiple attempts recorded"]
+  fly["Flywheel:<br/>each pass sharpens the next"]
+  fail2 --> attempts --> fly
+end
+
+%% ---------- CROSS-PHASE FLOW ----------
+sa1 --> nom
+align --> risk
+limit --> tickets
+gstop -. stop .-> retry
+t3 --> take
+retry --> fail2
+fly -. "tickets v2 = tickets + journal" .-> tickets
+
+%% ---------- STYLES ----------
+classDef p1 fill:#2f6f9f,stroke:#3f83b8,color:#fff;
+classDef p2 fill:#c08a2b,stroke:#d8a441,color:#fff;
+classDef p3 fill:#6b4fb0,stroke:#8468c9,color:#fff;
+classDef p4 fill:#1f7a6b,stroke:#2f9a86,color:#fff;
+classDef p5 fill:#5b6470,stroke:#79828f,color:#fff;
+classDef red fill:#7a2f2b,stroke:#e5534b,color:#fff;
+classDef green fill:#234b2b,stroke:#3fb950,color:#fff;
+classDef dec fill:#3a2f12,stroke:#e3b341,color:#f1e0a8;
+
+class brief,dontask,readcode,artifact,subj,callers,docs,rel,notes,sa1 p1;
+class nom,simple,grill,onesentence,align p2;
+class risk,br,fr,untested,ssot,limit,tickets,t1,t2,t3 p3;
+class guard,g1,g2,g3,g4,gstop red;
+class checks,c1,c2,c3,c4 green;
+class take,try,run,pass,retry p4;
+class fail2,attempts,fly p5;
+class hard,failed,contains dec;
+</pre>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({startOnLoad:true, theme:'dark', securityLevel:'loose',
+    themeVariables:{fontFamily:'-apple-system,Segoe UI,Roboto,sans-serif', fontSize:'14px'},
+    flowchart:{curve:'basis', nodeSpacing:40, rankSpacing:55}});
+  let z=1;
+  const el=()=>document.querySelector('.mermaid svg');
+  function apply(){const s=el(); if(s){s.style.transformOrigin='top left'; s.style.transform='scale('+z+')';}}
+  document.getElementById('zin').onclick=()=>{z=Math.min(3,z+0.15);apply()};
+  document.getElementById('zout').onclick=()=>{z=Math.max(0.4,z-0.15);apply()};
+  document.getElementById('zreset').onclick=()=>{z=1;apply()};
+</script>
+</body>
+</html>

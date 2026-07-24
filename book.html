@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Harness Books — Project Deck</title>
+<!-- surf unavailable, using CSS gradient/SVG decoration fallback -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME: Warm Signal (paper & ink) ============ */
+  :root {
+    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'Azeret Mono', 'SF Mono', Consolas, monospace;
+    --bg: #faf6f0;
+    --surface: #ffffff;
+    --surface2: #f5ece0;
+    --surface-elevated: #fffdf5;
+    --border: rgba(60, 40, 20, 0.10);
+    --border-bright: rgba(60, 40, 20, 0.18);
+    --text: #2c2a25;
+    --text-dim: #6f685d;
+    --accent: #c2410c;
+    --accent-dim: rgba(194, 65, 12, 0.08);
+    --sage: #4d7c5f;
+    --sage-dim: rgba(77, 124, 95, 0.10);
+    --ink: #1c2a4a;
+    --ink-dim: rgba(28, 42, 74, 0.08);
+    --code-bg: #2c2520;
+    --code-text: #f5ece0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1916;
+      --surface: #262220;
+      --surface2: #302b28;
+      --surface-elevated: #3a3430;
+      --border: rgba(200, 180, 160, 0.10);
+      --border-bright: rgba(200, 180, 160, 0.20);
+      --text: #f0e8dc;
+      --text-dim: #a89f90;
+      --accent: #e8703a;
+      --accent-dim: rgba(232, 112, 58, 0.12);
+      --sage: #7fb894;
+      --sage-dim: rgba(127, 184, 148, 0.10);
+      --ink: #9db4e0;
+      --ink-dim: rgba(157, 180, 224, 0.10);
+      --code-bg: #141210;
+      --code-text: #f0e8dc;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--text);
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  /* ============ SITE NAV (cross-page) ============ */
+  .site-nav {
+    position: fixed; top: 12px; right: 14px; z-index: 200;
+    display: flex; gap: 2px; align-items: center;
+    background: color-mix(in srgb, var(--bg) 75%, transparent 25%);
+    border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 6px;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.5px;
+  }
+  .site-nav a {
+    color: var(--text-dim); text-decoration: none;
+    padding: 4px 10px; border-radius: 999px;
+    transition: color .15s, background .15s;
+  }
+  .site-nav a:hover { color: var(--text); background: var(--accent-dim); }
+  .site-nav a.active { color: var(--accent); background: var(--accent-dim); }
+
+  /* ============ DECK ENGINE ============ */
+  .deck {
+    height: 100dvh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .slide {
+    height: 100dvh;
+    scroll-snap-align: start;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(40px, 6vh, 80px) clamp(40px, 8vw, 120px);
+    isolation: isolate;
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+    transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+  }
+  .slide.visible { opacity: 1; transform: none; }
+  .slide .reveal {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1);
+  }
+  .slide.visible .reveal { opacity: 1; transform: none; }
+  .slide.visible .reveal:nth-child(1) { transition-delay: 0.08s; }
+  .slide.visible .reveal:nth-child(2) { transition-delay: 0.16s; }
+  .slide.visible .reveal:nth-child(3) { transition-delay: 0.24s; }
+  .slide.visible .reveal:nth-child(4) { transition-delay: 0.32s; }
+  .slide.visible .reveal:nth-child(5) { transition-delay: 0.40s; }
+  .slide.visible .reveal:nth-child(6) { transition-delay: 0.48s; }
+  @media (prefers-reduced-motion: reduce) {
+    .slide, .slide .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  }
+
+  /* ============ NAV CHROME ============ */
+  .deck-progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: var(--accent); z-index: 100;
+    transition: width 0.3s ease; pointer-events: none;
+  }
+  .deck-dots {
+    position: fixed; right: clamp(10px, 1.5vw, 20px); top: 50%;
+    transform: translateY(-50%); display: flex; flex-direction: column;
+    gap: 6px; z-index: 100; padding: 8px;
+    background: color-mix(in srgb, var(--bg) 65%, transparent 35%);
+    border-radius: 20px;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .deck-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-dim); opacity: 0.3; border: none; padding: 0;
+    cursor: pointer; transition: opacity 0.2s, transform 0.2s;
+  }
+  .deck-dot:hover { opacity: 0.6; }
+  .deck-dot.active { opacity: 1; transform: scale(1.5); background: var(--accent); }
+  .deck-counter {
+    position: fixed; bottom: clamp(12px, 2vh, 24px); right: clamp(12px, 2vw, 24px);
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
+    z-index: 100; font-variant-numeric: tabular-nums;
+  }
+  .deck-hints {
+    position: fixed; bottom: clamp(12px, 2vh, 24px); left: 50%;
+    transform: translateX(-50%); font-family: var(--font-mono);
+    font-size: 11px; color: var(--text-dim); opacity: 0.6; z-index: 100;
+    transition: opacity 0.5s ease; white-space: nowrap;
+  }
+  .deck-hints.faded { opacity: 0; pointer-events: none; }
+
+  /* ============ SHARED ELEMENTS ============ */
+  .slide__display {
+    font-size: clamp(44px, 9vw, 110px);
+    font-weight: 800; letter-spacing: -2.5px; line-height: 0.98;
+    text-wrap: balance;
+  }
+  .slide__heading {
+    font-size: clamp(26px, 4.5vw, 46px);
+    font-weight: 700; letter-spacing: -1px; line-height: 1.12;
+    text-wrap: balance;
+  }
+  .slide__body {
+    font-size: clamp(16px, 2vw, 21px); line-height: 1.6;
+    color: var(--text-dim); text-wrap: pretty;
+  }
+  .slide__subtitle {
+    font-family: var(--font-mono);
+    font-size: clamp(12px, 1.4vw, 16px);
+    color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .slide__label {
+    font-family: var(--font-mono);
+    font-size: clamp(10px, 1.2vw, 13px); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--accent); margin-bottom: 12px;
+  }
+  .slide__decor { position: absolute; pointer-events: none; z-index: 0; }
+
+  /* ============ TITLE ============ */
+  .slide--title {
+    justify-content: center; align-items: center; text-align: center;
+    background-image: radial-gradient(ellipse at 50% 85%, var(--accent-dim) 0%, transparent 55%);
+  }
+  .slide--title .slide__display em { font-style: normal; color: var(--accent); }
+
+  /* ============ DIVIDER ============ */
+  .slide--divider { justify-content: center; }
+  .slide--divider .slide__number {
+    font-size: clamp(100px, 22vw, 260px); font-weight: 200; line-height: 0.85;
+    opacity: 0.07; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -55%); pointer-events: none;
+    font-variant-numeric: tabular-nums; color: var(--accent);
+  }
+
+  /* ============ CONTENT ============ */
+  .slide--content .slide__inner {
+    display: grid; grid-template-columns: 3fr 2fr;
+    gap: clamp(24px, 4vw, 60px); align-items: center; width: 100%;
+  }
+  .slide--content .slide__inner--flip { grid-template-columns: 2fr 3fr; }
+  .slide__bullets { list-style: none; padding: 0; margin-top: clamp(10px, 2vh, 20px); }
+  .slide__bullets li {
+    padding: clamp(6px, 1.2vh, 11px) 0 clamp(6px, 1.2vh, 11px) 24px;
+    position: relative;
+    font-size: clamp(15px, 1.9vw, 21px); line-height: 1.5; color: var(--text-dim);
+  }
+  .slide__bullets li::before {
+    content: ''; position: absolute; left: 0; top: calc(clamp(6px,1.2vh,11px) + 9px);
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  }
+  .slide__bullets li strong { color: var(--text); font-weight: 600; }
+  .slide__aside { display: flex; align-items: center; justify-content: center; min-height: 180px; }
+
+  /* ============ SPLIT ============ */
+  .slide--split { padding: 0; }
+  .slide--split .slide__panels { display: grid; grid-template-columns: 1fr 1fr; height: 100%; }
+  .slide--split .slide__panel {
+    padding: clamp(40px, 6vh, 80px) clamp(32px, 4vw, 64px);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .slide--split .slide__panel--primary { background: var(--surface); }
+  .slide--split .slide__panel--secondary { background: var(--surface2); }
+
+  /* ============ PILLAR CARDS ============ */
+  .pillars {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: clamp(12px, 1.8vw, 24px); flex: 1; min-height: 0;
+    margin-top: clamp(14px, 2.5vh, 28px); align-content: stretch;
+  }
+  .pillar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--accent); border-radius: 12px;
+    padding: clamp(16px, 3vh, 30px) clamp(14px, 1.8vw, 26px);
+    display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+  }
+  .pillar__num {
+    font-family: var(--font-mono); font-size: clamp(11px, 1.2vw, 14px);
+    font-weight: 600; color: var(--accent); letter-spacing: 1.5px;
+  }
+  .pillar__title {
+    font-size: clamp(17px, 2.1vw, 26px); font-weight: 700; letter-spacing: -0.4px;
+    line-height: 1.15; margin: clamp(6px, 1vh, 10px) 0 clamp(8px, 1.4vh, 14px);
+    text-wrap: balance;
+  }
+  .pillar__desc {
+    font-size: clamp(12.5px, 1.35vw, 16px); color: var(--text-dim); line-height: 1.5; flex: 1;
+  }
+  .pillar__tag {
+    font-family: var(--font-mono); font-size: clamp(9.5px, 1vw, 11.5px);
+    color: var(--accent); background: var(--accent-dim);
+    padding: 3px 9px; border-radius: 4px; margin-top: clamp(10px, 1.6vh, 16px);
+    align-self: flex-start; letter-spacing: 0.5px;
+  }
+
+  /* ============ PIPELINE ============ */
+  .pipeline {
+    display: flex; align-items: stretch; gap: 0; flex: 1; min-height: 0;
+    margin-top: clamp(12px, 2vh, 24px);
+  }
+  .pipeline__step {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--accent); border-radius: 10px;
+    padding: clamp(14px, 2.5vh, 28px) clamp(12px, 1.5vw, 22px);
+    display: flex; flex-direction: column; min-width: 0; overflow-wrap: break-word;
+  }
+  .pipeline__num {
+    font-family: var(--font-mono); font-size: clamp(10px, 1.2vw, 13px);
+    font-weight: 600; color: var(--accent); letter-spacing: 1px;
+  }
+  .pipeline__name {
+    font-size: clamp(15px, 1.8vw, 22px); font-weight: 700;
+    margin: clamp(4px, 0.8vh, 8px) 0; letter-spacing: -0.3px;
+  }
+  .pipeline__desc { font-size: clamp(11.5px, 1.25vw, 15px); color: var(--text-dim); line-height: 1.5; flex: 1; }
+  .pipeline__file {
+    font-family: var(--font-mono); font-size: clamp(9.5px, 1.05vw, 11.5px);
+    color: var(--accent); background: var(--accent-dim);
+    padding: 3px 8px; border-radius: 4px; margin-top: clamp(8px, 1.5vh, 16px);
+    align-self: flex-start;
+  }
+  .pipeline__arrow {
+    display: flex; align-items: center; padding: 0 clamp(3px, 0.4vw, 6px);
+    color: var(--accent); flex-shrink: 0; opacity: 0.45;
+  }
+
+  /* ============ TABLE ============ */
+  .slide--table { padding: clamp(24px, 4vh, 48px) clamp(24px, 4vw, 60px); }
+  .table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; flex: 1; min-height: 0;
+    margin-top: clamp(10px, 1.5vh, 20px);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .table-scroll { overflow-x: auto; }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    background: var(--surface2); font-family: var(--font-mono);
+    font-size: clamp(10px, 1.2vw, 13px); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim);
+    text-align: left; padding: clamp(8px, 1.3vh, 14px) clamp(14px, 2vw, 24px);
+    border-bottom: 2px solid var(--border-bright); white-space: nowrap;
+  }
+  .data-table td {
+    padding: clamp(8px, 1.3vh, 14px) clamp(14px, 2vw, 24px);
+    border-bottom: 1px solid var(--border);
+    font-size: clamp(13px, 1.6vw, 18px); vertical-align: top; line-height: 1.45;
+  }
+  .data-table td:first-child {
+    font-family: var(--font-mono); font-size: clamp(11px, 1.3vw, 14px);
+    color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  .data-table td:nth-child(2) { font-weight: 600; white-space: nowrap; }
+  .data-table td:last-child { color: var(--text-dim); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:nth-child(even) { background: var(--surface2); }
+  .data-table tbody tr { transition: background 0.15s; }
+  .data-table tbody tr:hover { background: var(--accent-dim); }
+  .badge {
+    display: inline-block; font-family: var(--font-mono);
+    font-size: clamp(9px, 1vw, 11px); font-weight: 600; letter-spacing: 0.5px;
+    padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+  }
+  .badge--new { color: var(--sage); background: var(--sage-dim); }
+  .badge--co { color: var(--ink); background: var(--ink-dim); }
+  .badge--warn { color: var(--accent); background: var(--accent-dim); }
+
+  /* ============ QUOTE ============ */
+  .slide--quote {
+    justify-content: center; align-items: center; text-align: center;
+    padding: clamp(60px, 10vh, 120px) clamp(60px, 12vw, 200px);
+  }
+  .slide__quote-mark {
+    font-size: clamp(80px, 14vw, 180px); line-height: 0.5; opacity: 0.08;
+    font-family: Georgia, serif; pointer-events: none; margin-bottom: -20px;
+    color: var(--accent);
+  }
+  .slide--quote blockquote {
+    font-size: clamp(24px, 4vw, 48px); font-weight: 600;
+    line-height: 1.3; letter-spacing: -0.8px; text-wrap: balance;
+  }
+  .slide--quote cite {
+    font-family: var(--font-mono); font-size: clamp(11px, 1.4vw, 14px);
+    font-style: normal; margin-top: clamp(16px, 3vh, 32px); display: block;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim);
+  }
+
+  /* ============ FULL-BLEED ============ */
+  .slide--bleed { padding: 0; justify-content: flex-end; }
+  .slide__bg { position: absolute; inset: 0; z-index: 0; }
+  .slide__bg--gradient {
+    background:
+      radial-gradient(ellipse at 15% 20%, rgba(232, 112, 58, 0.35) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 80%, rgba(77, 124, 95, 0.3) 0%, transparent 55%),
+      linear-gradient(135deg, #2c2018 0%, #1c1916 55%, #22252c 100%);
+  }
+  .slide__scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 45%, transparent 100%);
+  }
+  .slide--bleed .slide__content {
+    position: relative; z-index: 2;
+    padding: clamp(40px, 6vh, 80px) clamp(40px, 8vw, 120px);
+    color: #fff;
+  }
+  .slide--bleed .slide__heading { color: #fff; font-size: clamp(28px, 4.6vw, 52px); }
+  .slide--bleed .slide__subtitle { color: rgba(255,255,255,0.72); }
+  .slide--bleed .slide__label { color: #f0a37a; }
+
+  /* ============ RULE CARDS (hard rules) ============ */
+  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(12px, 1.8vw, 22px); margin-top: clamp(14px, 2.5vh, 28px); }
+  .rule {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 10px;
+    padding: clamp(14px, 2.4vh, 26px) clamp(16px, 2vw, 26px); min-width: 0;
+  }
+  .rule__num {
+    font-family: var(--font-mono); font-size: clamp(10px, 1.1vw, 13px);
+    font-weight: 600; color: var(--accent); letter-spacing: 1.5px;
+  }
+  .rule__title { font-size: clamp(15px, 1.9vw, 22px); font-weight: 700; margin: 6px 0 8px; letter-spacing: -0.3px; }
+  .rule__desc { font-size: clamp(12.5px, 1.35vw, 16px); color: var(--text-dim); line-height: 1.5; }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-height: 700px) {
+    .slide { padding: clamp(24px, 4vh, 40px) clamp(32px, 6vw, 80px); }
+    .slide__display { font-size: clamp(34px, 7.5vw, 68px); }
+    .slide--divider .slide__number { font-size: clamp(80px, 16vw, 160px); }
+  }
+  @media (max-height: 600px) {
+    .slide__decor { display: none; }
+    .slide--quote { padding: clamp(32px, 6vh, 60px) clamp(40px, 8vw, 100px); }
+    .slide__quote-mark { display: none; }
+  }
+  @media (max-height: 500px) {
+    .slide { padding: clamp(16px, 3vh, 24px) clamp(24px, 5vw, 48px); }
+    .deck-dots { display: none; }
+    .slide__display { font-size: clamp(28px, 7vw, 48px); }
+  }
+  @media (max-width: 900px) {
+    .pillars { grid-template-columns: 1fr; overflow-y: auto; }
+    .rules { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .slide--content .slide__inner, .slide--content .slide__inner--flip { grid-template-columns: 1fr; }
+    .slide--content .slide__aside { display: none; }
+    .slide--split .slide__panels { grid-template-columns: 1fr; }
+    .pipeline { flex-direction: column; overflow-y: auto; }
+    .pipeline__arrow { justify-content: center; padding: 4px 0; transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="index.html">Map</a>
+  <a href="slides.html">Workflow</a>
+  <a href="book.html" class="active">Book</a>
+</nav>
+
+<div class="deck">
+
+  <!-- 1 · TITLE -->
+  <section class="slide slide--title">
+    <svg class="slide__decor" style="top:0;right:0;" width="140" height="140" viewBox="0 0 140 140">
+      <line x1="140" y1="0" x2="140" y2="48" stroke="var(--accent)" stroke-width="2" opacity="0.25"/>
+      <line x1="92" y1="0" x2="140" y2="0" stroke="var(--accent)" stroke-width="2" opacity="0.25"/>
+    </svg>
+    <svg class="slide__decor" style="bottom:0;left:0;" width="140" height="140" viewBox="0 0 140 140">
+      <line x1="0" y1="92" x2="0" y2="140" stroke="var(--accent)" stroke-width="2" opacity="0.25"/>
+      <line x1="0" y1="140" x2="48" y2="140" stroke="var(--accent)" stroke-width="2" opacity="0.25"/>
+    </svg>
+    <div class="reveal"><p class="slide__subtitle" style="margin-bottom:clamp(16px,2vh,32px);">Project brief &middot; rebuilt 2026-07-23</p></div>
+    <h1 class="slide__display reveal">The <em>Harness</em> Books</h1>
+    <div class="reveal"><p class="slide__subtitle" style="margin-top:clamp(16px,2vh,32px);">Two books on agentic coding, written for working engineers</p></div>
+  </section>
+
+  <!-- 2 · THE HARD CUTOVER -->
+  <section class="slide slide--content" style="background-image:radial-gradient(ellipse at 15% 85%, var(--accent-dim) 0%, transparent 45%);">
+    <div class="slide__inner">
+      <div>
+        <p class="slide__label reveal">2026-07-23</p>
+        <h2 class="slide__heading reveal">The Hard Cutover</h2>
+        <ul class="slide__bullets">
+          <li class="reveal">The book was rebuilt on <strong>six pillars</strong>.</li>
+          <li class="reveal">The old ladder skeleton — legible &rarr; runnable &rarr; self-correcting &rarr; guarded &rarr; composable — is <strong>retired as the spine</strong>.</li>
+          <li class="reveal">Old chapters survive <strong>only where explicitly slotted</strong> in the new map.</li>
+          <li class="reveal"><strong>Do not resurrect the old structure.</strong></li>
+        </ul>
+      </div>
+      <div class="slide__aside reveal">
+        <svg viewBox="0 0 200 200" width="200" height="200">
+          <g opacity="0.35">
+            <line x1="40" y1="40" x2="160" y2="40" stroke="var(--text-dim)" stroke-width="2" stroke-dasharray="5 5"/>
+            <line x1="40" y1="70" x2="160" y2="70" stroke="var(--text-dim)" stroke-width="2" stroke-dasharray="5 5"/>
+            <line x1="40" y1="100" x2="160" y2="100" stroke="var(--text-dim)" stroke-width="2" stroke-dasharray="5 5"/>
+            <line x1="55" y1="25" x2="145" y2="115" stroke="var(--accent)" stroke-width="3"/>
+            <line x1="145" y1="25" x2="55" y2="115" stroke="var(--accent)" stroke-width="3"/>
+          </g>
+          <g>
+            <rect x="34" y="140" width="20" height="40" rx="3" fill="var(--accent)" opacity="0.85"/>
+            <rect x="58" y="140" width="20" height="40" rx="3" fill="var(--accent)" opacity="0.7"/>
+            <rect x="82" y="140" width="20" height="40" rx="3" fill="var(--accent)" opacity="0.85"/>
+            <rect x="106" y="140" width="20" height="40" rx="3" fill="var(--accent)" opacity="0.7"/>
+            <rect x="130" y="140" width="20" height="40" rx="3" fill="var(--accent)" opacity="0.85"/>
+            <rect x="154" y="140" width="20" height="40" rx="3" fill="var(--accent)" opacity="0.7"/>
+          </g>
+          <text x="104" y="196" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text-dim)">SIX PILLARS</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · TWO BOOKS -->
+  <section class="slide slide--split">
+    <div class="slide__panels">
+      <div class="slide__panel slide__panel--primary">
+        <p class="slide__label reveal">Book One</p>
+        <h2 class="slide__heading reveal" style="font-size:clamp(22px,3.4vw,36px);">The Foundation</h2>
+        <ul class="slide__bullets">
+          <li class="reveal">Six pillars, one thesis: <strong>agents amplify structure, including its absence</strong>.</li>
+          <li class="reveal">Teaches an engineering system agents <strong>cannot degrade</strong> and that <strong>learns from every agent mistake</strong>.</li>
+          <li class="reveal">Register: prescriptive. Win the skeptic with rigor, evidence, restraint — never enthusiasm.</li>
+        </ul>
+      </div>
+      <div class="slide__panel slide__panel--secondary">
+        <p class="slide__label reveal" style="color:var(--sage);">Book Two</p>
+        <h2 class="slide__heading reveal" style="font-size:clamp(22px,3.4vw,36px);">The Frontier</h2>
+        <ul class="slide__bullets">
+          <li class="reveal">Operating at scale: orchestration, multi-model setups, long-running agents, entropy and throughput.</li>
+          <li class="reveal">Register shifts from prescriptive to <strong>exploratory</strong>.</li>
+          <li class="reveal">Thinner after the cutover — the workflow moved into Book One. <strong>Its map needs re-cutting.</strong></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · THESIS QUOTE -->
+  <section class="slide slide--quote" style="background-image:radial-gradient(ellipse at 50% 50%, var(--accent-dim) 0%, transparent 40%);">
+    <div class="slide__quote-mark reveal">&ldquo;</div>
+    <blockquote class="reveal">Agents amplify structure&thinsp;—&thinsp;including its absence.</blockquote>
+    <cite class="reveal">&mdash; The bet. One thesis for both books</cite>
+  </section>
+
+  <!-- 5 · THE READER -->
+  <section class="slide slide--content" style="background-image:radial-gradient(ellipse at 85% 15%, var(--sage-dim) 0%, transparent 45%);">
+    <div class="slide__inner slide__inner--flip">
+      <div class="slide__aside reveal">
+        <svg viewBox="0 0 180 180" width="180" height="180">
+          <circle cx="90" cy="90" r="60" fill="none" stroke="var(--accent)" stroke-width="2.5" opacity="0.6"/>
+          <line x1="60" y1="112" x2="120" y2="112" stroke="var(--accent)" stroke-width="2" opacity="0.5"/>
+          <text x="90" y="82" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text-dim)">RIGOR</text>
+          <text x="90" y="100" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text-dim)">EVIDENCE</text>
+          <text x="90" y="134" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--accent)">RESTRAINT</text>
+        </svg>
+      </div>
+      <div>
+        <p class="slide__label reveal">The Reader</p>
+        <h2 class="slide__heading reveal">Written for the Skeptic</h2>
+        <ul class="slide__bullets">
+          <li class="reveal"><strong>Target reader:</strong> the engineer who thinks this is all hype.</li>
+          <li class="reveal">Win them with <strong>rigor, evidence, and restraint</strong> — never with enthusiasm.</li>
+          <li class="reveal">Honest about open problems: the skeptical reader smells overclaiming instantly.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · DIVIDER 01 -->
+  <section class="slide slide--divider" style="background-image:radial-gradient(ellipse at 78% 60%, var(--accent-dim) 0%, transparent 40%);">
+    <span class="slide__number">01</span>
+    <div>
+      <h2 class="slide__heading reveal">The Six Pillars</h2>
+      <p class="slide__subtitle reveal" style="margin-top:12px;">The new foundation — locked</p>
+    </div>
+  </section>
+
+  <!-- 7 · PILLARS 1–3 -->
+  <section class="slide" style="background-image:radial-gradient(ellipse at 20% 10%, var(--accent-dim) 0%, transparent 40%);">
+    <p class="slide__label reveal">Pillars 1&ndash;3</p>
+    <h2 class="slide__heading reveal">Structure, Feedback, Quality</h2>
+    <div class="pillars reveal">
+      <div class="pillar">
+        <span class="pillar__num">PILLAR 1</span>
+        <div class="pillar__title">The codebase is the interface</div>
+        <div class="pillar__desc">Mapped modules, ownership, allowed dependencies, progressive disclosure of agent instructions — all enforced in CI, not left to convention. The repository continuously proves an agent can navigate it safely.</div>
+        <span class="pillar__tag">enforced in CI</span>
+      </div>
+      <div class="pillar">
+        <span class="pillar__num">PILLAR 2</span>
+        <div class="pillar__title">Sensors and guides create continuous feedback</div>
+        <div class="pillar__desc">Sensors observe; guides encode what the organization has learned. Recurrence is the signal: one occurrence is noise, repetition is a missing rule. The promotion loop turns mistakes into permanent organizational knowledge.</div>
+        <span class="pillar__tag">finding &rarr; guide &rarr; enforcement</span>
+      </div>
+      <div class="pillar">
+        <span class="pillar__num">PILLAR 3</span>
+        <div class="pillar__title">Traditional quality still matters — more</div>
+        <div class="pillar__desc">Hammer the types: invalid states unrepresentable. Hammer the interfaces: control surfaces an agent can't exploit. Data-flow maps are now cheap — generate them and check them against the real code.</div>
+        <span class="pillar__tag">verified map &gt; fictional diagram</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · PILLARS 4–6 -->
+  <section class="slide" style="background-image:radial-gradient(ellipse at 80% 90%, var(--sage-dim) 0%, transparent 40%);">
+    <p class="slide__label reveal">Pillars 4&ndash;6</p>
+    <h2 class="slide__heading reveal">Infrastructure, Fault, Workflow</h2>
+    <div class="pillars reveal">
+      <div class="pillar" style="border-top-color:var(--sage);">
+        <span class="pillar__num" style="color:var(--sage);">PILLAR 4</span>
+        <div class="pillar__title">Infrastructure matters more than ever</div>
+        <div class="pillar__desc">Controlled runners, sandboxes, worktrees, tested backups, supply-chain rules. Design the environment as though the agent will eventually destroy something — because it will.</div>
+        <span class="pillar__tag" style="color:var(--sage);background:var(--sage-dim);">assume destruction</span>
+      </div>
+      <div class="pillar" style="border-top-color:var(--sage);">
+        <span class="pillar__num" style="color:var(--sage);">PILLAR 5</span>
+        <div class="pillar__title">Every agent mistake is your fault</div>
+        <div class="pillar__desc">A repeated agent failure is evidence of a missing engineering control. Every incident feeds the flywheel: mistake &rarr; analysis &rarr; missing control &rarr; improvement. Never use future capability as an excuse for weak systems today.</div>
+        <span class="pillar__tag" style="color:var(--sage);background:var(--sage-dim);">make the lint stricter</span>
+      </div>
+      <div class="pillar" style="border-top-color:var(--sage);">
+        <span class="pillar__num" style="color:var(--sage);">PILLAR 6</span>
+        <div class="pillar__title">Agentic development requires an explicit workflow</div>
+        <div class="pillar__desc">Research, align, plan, execute, journal — one ticket at a time. The work is not complete when the patch lands; it is complete when the system has learned from it.</div>
+        <span class="pillar__tag" style="color:var(--sage);background:var(--sage-dim);">complete = learned</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · WORKFLOW PIPELINE -->
+  <section class="slide" style="background-image:radial-gradient(ellipse at 50% 100%, var(--accent-dim) 0%, transparent 40%);">
+    <p class="slide__label reveal">Pillar 6, expanded &middot; becomes Part VI</p>
+    <h2 class="slide__heading reveal">The Explicit Workflow</h2>
+    <div class="pipeline reveal">
+      <div class="pipeline__step">
+        <div class="pipeline__num">01</div>
+        <div class="pipeline__name">Research</div>
+        <div class="pipeline__desc">Map first. Research produces evidence, not solutions.</div>
+        <div class="pipeline__file">Ch. 21 &middot; Map First</div>
+      </div>
+      <div class="pipeline__arrow"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h14m-4-4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="pipeline__step">
+        <div class="pipeline__num">02</div>
+        <div class="pipeline__name">Grill &amp; Align</div>
+        <div class="pipeline__desc">Shared nomenclature; the one-sentence goal. Alignment prevents solving a different problem correctly.</div>
+        <div class="pipeline__file">Ch. 22 &middot; Grill and Align</div>
+      </div>
+      <div class="pipeline__arrow"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h14m-4-4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="pipeline__step">
+        <div class="pipeline__num">03</div>
+        <div class="pipeline__name">Plan</div>
+        <div class="pipeline__desc">Risk, guardrails as execution constraints, deterministic gates, narrow tickets a junior could run.</div>
+        <div class="pipeline__file">Ch. 23 &middot; Plan for Damage</div>
+      </div>
+      <div class="pipeline__arrow"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h14m-4-4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="pipeline__step">
+        <div class="pipeline__num">04</div>
+        <div class="pipeline__name">Execute</div>
+        <div class="pipeline__desc">One ticket, isolated, pass or stop. Never weaken a failing check to get green.</div>
+        <div class="pipeline__file">Ch. 24 &middot; One Ticket at a Time</div>
+      </div>
+      <div class="pipeline__arrow"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h14m-4-4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="pipeline__step">
+        <div class="pipeline__num">05</div>
+        <div class="pipeline__name">Journal &amp; Strengthen</div>
+        <div class="pipeline__desc">The ledger. Tickets v2 = Tickets v1 + Journal + New Guardrails. Done when the system has learned.</div>
+        <div class="pipeline__file">Ch. 25 &middot; Journal and Promote</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · DIVIDER 02 -->
+  <section class="slide slide--divider" style="background-image:radial-gradient(ellipse at 25% 40%, var(--sage-dim) 0%, transparent 40%);">
+    <span class="slide__number">02</span>
+    <div>
+      <h2 class="slide__heading reveal">Voice &amp; Rules</h2>
+      <p class="slide__subtitle reveal" style="margin-top:12px;">How the book sounds — and what is never violated</p>
+    </div>
+  </section>
+
+  <!-- 11 · VOICE -->
+  <section class="slide slide--content" style="background-image:radial-gradient(ellipse at 10% 20%, var(--accent-dim) 0%, transparent 40%);">
+    <div class="slide__inner">
+      <div>
+        <p class="slide__label reveal">Locked</p>
+        <h2 class="slide__heading reveal">The Voice</h2>
+        <ul class="slide__bullets">
+          <li class="reveal"><strong>Terse, imperative, law-like.</strong> Titles read like laws: &ldquo;Primitives Before Prompts,&rdquo; &ldquo;Fail with Instructions,&rdquo; &ldquo;Hammer Your Types.&rdquo;</li>
+          <li class="reveal"><strong>One hand wrote this book.</strong> Clipped, rule-stating cadence throughout.</li>
+          <li class="reveal"><strong>No history.</strong> No model-release timelines. Chapter 1 states the premise and moves.</li>
+          <li class="reveal"><strong>Honest about open problems.</strong> The skeptical reader smells overclaiming instantly.</li>
+          <li class="reveal"><strong>Prose-first.</strong> Code blocks now permitted — but only when one block does the work of a page. ASCII diagrams become designed figures.</li>
+        </ul>
+      </div>
+      <div class="slide__aside reveal">
+        <svg viewBox="0 0 160 200" width="160" height="200">
+          <rect x="30" y="20" width="100" height="150" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+          <line x1="45" y1="48" x2="115" y2="48" stroke="var(--text-dim)" stroke-width="3" opacity="0.7"/>
+          <line x1="45" y1="66" x2="100" y2="66" stroke="var(--text-dim)" stroke-width="2" opacity="0.4"/>
+          <line x1="45" y1="80" x2="110" y2="80" stroke="var(--text-dim)" stroke-width="2" opacity="0.4"/>
+          <line x1="45" y1="94" x2="95" y2="94" stroke="var(--text-dim)" stroke-width="2" opacity="0.4"/>
+          <line x1="45" y1="118" x2="115" y2="118" stroke="var(--accent)" stroke-width="2.5" opacity="0.8"/>
+          <line x1="45" y1="136" x2="105" y2="136" stroke="var(--text-dim)" stroke-width="2" opacity="0.4"/>
+          <line x1="45" y1="150" x2="112" y2="150" stroke="var(--text-dim)" stroke-width="2" opacity="0.4"/>
+          <text x="80" y="192" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text-dim)">PROSE-FIRST</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · APHORISM QUOTE -->
+  <section class="slide slide--quote" style="background-image:radial-gradient(ellipse at 50% 20%, var(--sage-dim) 0%, transparent 40%);">
+    <div class="slide__quote-mark reveal">&ldquo;</div>
+    <blockquote class="reveal">A backup that has never been restored is only a theory.</blockquote>
+    <cite class="reveal">Aphorisms are load-bearing &middot; coin them deliberately, don&rsquo;t dilute them</cite>
+  </section>
+
+  <!-- 13 · HARD RULES -->
+  <section class="slide" style="background-image:radial-gradient(ellipse at 90% 10%, var(--accent-dim) 0%, transparent 40%);">
+    <p class="slide__label reveal">Never violate</p>
+    <h2 class="slide__heading reveal">The Four Hard Rules</h2>
+    <div class="rules reveal">
+      <div class="rule">
+        <span class="rule__num">RULE 1</span>
+        <div class="rule__title">No internal names in manuscript</div>
+        <div class="rule__desc">Never mention the internal project name, the Roman candidate names (Lex Imperium, Custos, Praetor, Vinculum, Ordo, &hellip;), or the author&rsquo;s internal interface specifics.</div>
+      </div>
+      <div class="rule">
+        <span class="rule__num">RULE 2</span>
+        <div class="rule__title">Attribute borrowed frameworks</div>
+        <div class="rule__desc">Name the source — OpenAI, Stripe, Anthropic, LangChain — and clearly mark the book&rsquo;s own extensions.</div>
+      </div>
+      <div class="rule">
+        <span class="rule__num">RULE 3</span>
+        <div class="rule__title">Paraphrase, don&rsquo;t quote</div>
+        <div class="rule__desc">Never quote sources at length. Quotes stay under 15 words and are rare.</div>
+      </div>
+      <div class="rule">
+        <span class="rule__num">RULE 4</span>
+        <div class="rule__title">No single-vendor theses</div>
+        <div class="rule__desc">Never rest a claim on a vendor&rsquo;s post about its own product; always pair with independent corroboration. Applies to Droid CLI agent-readiness and Shai-Hulud before they carry weight.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 · SENTINEL RULING -->
+  <section class="slide slide--content" style="background-image:radial-gradient(ellipse at 20% 90%, var(--ink-dim) 0%, transparent 45%);">
+    <div class="slide__inner">
+      <div>
+        <p class="slide__label reveal">Rule 1 &middot; default ruling, flip if wrong</p>
+        <h2 class="slide__heading reveal">The Sentinel Ruling</h2>
+        <ul class="slide__bullets">
+          <li class="reveal">Sentinel is the <strong>public companion project</strong> — it may be named in manuscript.</li>
+          <li class="reveal">Its <strong>concepts are book vocabulary</strong>: observe/evaluate/render, typed findings, recurrence thresholds, guide candidates, code-first configuration.</li>
+          <li class="reveal"><strong>Never conflate:</strong> a completed run with a failing verdict vs. a faulted run.</li>
+          <li class="reveal">Implementation internals stay out — package layout, CLI invocations, state-file paths.</li>
+          <li class="reveal">At most <strong>one illustrative config block per chapter</strong>.</li>
+        </ul>
+      </div>
+      <div class="slide__aside reveal">
+        <svg viewBox="0 0 180 180" width="180" height="180">
+          <circle cx="90" cy="90" r="72" fill="none" stroke="var(--ink)" stroke-width="2" opacity="0.5"/>
+          <circle cx="90" cy="90" r="44" fill="none" stroke="var(--accent)" stroke-width="2" opacity="0.7" stroke-dasharray="4 4"/>
+          <text x="90" y="86" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text)">CONCEPTS</text>
+          <text x="90" y="100" text-anchor="middle" font-family="var(--font-mono)" font-size="8" fill="var(--accent)">IN</text>
+          <text x="90" y="34" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-dim)">INTERNALS: OUT</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 · DIVIDER 03 -->
+  <section class="slide slide--divider" style="background-image:radial-gradient(ellipse at 70% 30%, var(--accent-dim) 0%, transparent 40%);">
+    <span class="slide__number">03</span>
+    <div>
+      <h2 class="slide__heading reveal">Book One Map</h2>
+      <p class="slide__subtitle reveal" style="margin-top:12px;">26 chapters &middot; opening + six parts + closing</p>
+    </div>
+  </section>
+
+  <!-- 16 · OPENING + PART I -->
+  <section class="slide slide--table">
+    <p class="slide__label reveal">Opening &middot; Part I</p>
+    <h2 class="slide__heading reveal" style="font-size:clamp(22px,3.4vw,36px);">The Codebase Is the Interface</h2>
+    <div class="table-wrap reveal">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Ch.</th><th>Title</th><th>What it holds</th></tr></thead>
+          <tbody>
+            <tr><td>01</td><td>The Bet</td><td>Agents amplify structure, including its absence. Survives unchanged as the opening.</td></tr>
+            <tr><td>02</td><td>The Map</td><td>Module boundaries, ownership, allowed dependencies — DDD-like structure without DDD dogma.</td></tr>
+            <tr><td>03</td><td>Progressive Disclosure</td><td>Root orientation, module-level instructions, task-level constraints. Retires the &ldquo;front door&rdquo; framing.</td></tr>
+            <tr><td>04</td><td>Agent Readiness, Enforced <span class="badge badge--new">new</span></td><td>Legibility as a CI-checked property: size limits, ownership rules, stale-guide detection.</td></tr>
+            <tr><td>05</td><td>Rails Before Refactors</td><td>Making an existing codebase the interface; migration lives here. Absorbs parity discipline as a section.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 17 · PART II -->
+  <section class="slide slide--table">
+    <p class="slide__label reveal">Part II</p>
+    <h2 class="slide__heading reveal" style="font-size:clamp(22px,3.4vw,36px);">Sensors and Guides</h2>
+    <div class="table-wrap reveal">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Ch.</th><th>Title</th><th>What it holds</th></tr></thead>
+          <tbody>
+            <tr><td>06</td><td>Guides and Sensors</td><td>The taxonomy (drafted 2026-07-04). Now a load-bearing wall, not one chapter among many.</td></tr>
+            <tr><td>07</td><td>Practical Harness Engineering</td><td>Drafted. Placement inside Part II confirmed by the cutover.</td></tr>
+            <tr><td>08</td><td>Fail with Instructions</td><td>Sensor output carries self-correction instructions written for model consumption.</td></tr>
+            <tr><td>09</td><td>Enforce Without Blocking</td><td>Survives.</td></tr>
+            <tr><td>10</td><td>From Finding to Rule</td><td>Recurrence, promotion, guide candidates — the Sentinel chapter, concept-first per Rule 1.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 18 · PART III -->
+  <section class="slide slide--table">
+    <p class="slide__label reveal">Part III</p>
+    <h2 class="slide__heading reveal" style="font-size:clamp(22px,3.4vw,36px);">Engineering Quality Still Matters</h2>
+    <div class="table-wrap reveal">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Ch.</th><th>Title</th><th>What it holds</th></tr></thead>
+          <tbody>
+            <tr><td>11</td><td>Hammer Your Types</td><td>Invalid states unrepresentable: identity, transitions, protocol versions, external-vs-trusted data.</td></tr>
+            <tr><td>12</td><td>Contracts at the Boundaries</td><td>&ldquo;Hammer your interfaces.&rdquo; Agents exploit ambiguity even when they don&rsquo;t intend to.</td></tr>
+            <tr><td>13</td><td>Primitives Before Prompts</td><td>Locked thesis: the surface sets the ceiling; the primitive set is not finished.</td></tr>
+            <tr><td>14</td><td>Maps That Are Checked</td><td>Cheap data-flow maps, import analysis, AST queries — verified maps over fictional diagrams.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 19 · PART IV -->
+  <section class="slide slide--table">
+    <p class="slide__label reveal">Part IV</p>
+    <h2 class="slide__heading reveal" style="font-size:clamp(22px,3.4vw,36px);">Infrastructure</h2>
+    <div class="table-wrap reveal">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Ch.</th><th>Title</th><th>What it holds</th></tr></thead>
+          <tbody>
+            <tr><td>15</td><td>Runners</td><td>Reproducible, limited, logged, cleaned up.</td></tr>
+            <tr><td>16</td><td>Sandboxes and Worktrees</td><td>Minimize blast radius; one bounded workspace per task.</td></tr>
+            <tr><td>17</td><td>Backups</td><td>Automatic, versioned, tested, restorable. A backup never restored is only a theory.</td></tr>
+            <tr><td>18</td><td>Supply Chain and Security</td><td>Shai-Hulud-class threats; dependency rules as friction at the exact point of risk.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 20 · PARTS V, VI, CLOSING -->
+  <section class="slide slide--table">
+    <p class="slide__label reveal">Part V &middot; Part VI &middot; Closing</p>
+    <h2 class="slide__heading reveal" style="font-size:clamp(22px,3.4vw,36px);">Fault, Workflow, and the Last Move</h2>
+    <div class="table-wrap reveal">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Ch.</th><th>Title</th><th>What it holds</th></tr></thead>
+          <tbody>
+            <tr><td>19</td><td>Every Agent Mistake Is Your Fault</td><td>The incident-to-control flywheel; the fourteen &ldquo;why&rdquo; questions.</td></tr>
+            <tr><td>20</td><td>The Bitter Lesson</td><td>Models will improve; strengthen the system anyway. Pairs with &ldquo;build harnesses to be dismantled.&rdquo;</td></tr>
+            <tr><td>21</td><td>Map First</td><td>Research produces evidence, not solutions; &ldquo;just give me the map of X.&rdquo;</td></tr>
+            <tr><td>22</td><td>Grill and Align</td><td>Shared nomenclature; the one-sentence goal.</td></tr>
+            <tr><td>23</td><td>Plan for Damage</td><td>Guardrails repo-enforced, not prompt-trusted; deterministic gates; the machine-checkable &ldquo;done.&rdquo;</td></tr>
+            <tr><td>24</td><td>One Ticket at a Time</td><td>Smallest valid change, pass or stop. Absorbs &ldquo;Small Chunks, Delete Last.&rdquo;</td></tr>
+            <tr><td>25</td><td>Journal and Promote</td><td>The ledger; Tickets v2 = v1 + Journal + New Guardrails.</td></tr>
+            <tr><td>26</td><td>The Highest-Leverage Move</td><td>The promotion loop as the human&rsquo;s core act — an operating system for future agents.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 21 · RETIRED -->
+  <section class="slide slide--content" style="background-image:radial-gradient(ellipse at 85% 85%, var(--accent-dim) 0%, transparent 40%);">
+    <div class="slide__inner">
+      <div>
+        <p class="slide__label reveal">Post-cutover</p>
+        <h2 class="slide__heading reveal">Retired from Book One</h2>
+        <ul class="slide__bullets">
+          <li class="reveal"><strong>Deterministic Build and Run</strong>, <strong>The Test Harness Is the Feedback Loop</strong>, <strong>Style and Validation as Instant Guardrails</strong> — dissolve into Parts I, II, IV as sections; they no longer earn chapters.</li>
+          <li class="reveal"><strong>Quarantine the Exceptions</strong> — fold into Ch. 12 or cut.</li>
+          <li class="reveal"><strong>Observability as the Agent&rsquo;s Eyes</strong> — fold into runners/sensors, or move to Book Two.</li>
+        </ul>
+      </div>
+      <div class="slide__aside reveal">
+        <svg viewBox="0 0 160 160" width="160" height="160">
+          <rect x="30" y="30" width="100" height="18" rx="4" fill="none" stroke="var(--text-dim)" stroke-width="1.5" opacity="0.5"/>
+          <rect x="30" y="56" width="100" height="18" rx="4" fill="none" stroke="var(--text-dim)" stroke-width="1.5" opacity="0.5"/>
+          <rect x="30" y="82" width="100" height="18" rx="4" fill="none" stroke="var(--text-dim)" stroke-width="1.5" opacity="0.5"/>
+          <line x1="24" y1="39" x2="136" y2="39" stroke="var(--accent)" stroke-width="2" opacity="0.7"/>
+          <line x1="24" y1="65" x2="136" y2="65" stroke="var(--accent)" stroke-width="2" opacity="0.7"/>
+          <line x1="24" y1="91" x2="136" y2="91" stroke="var(--accent)" stroke-width="2" opacity="0.7"/>
+          <text x="80" y="132" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text-dim)">SECTIONS, NOT CHAPTERS</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 22 · DIVIDER 04 -->
+  <section class="slide slide--divider" style="background-image:radial-gradient(ellipse at 30% 65%, var(--sage-dim) 0%, transparent 40%);">
+    <span class="slide__number">04</span>
+    <div>
+      <h2 class="slide__heading reveal">The Evidence Base</h2>
+      <p class="slide__subtitle reveal" style="margin-top:12px;">Source canon — and the counter-evidence the book must face</p>
+    </div>
+  </section>
+
+  <!-- 23 · SOURCE CANON -->
+  <section class="slide slide--table">
+    <p class="slide__label reveal">Source canon</p>
+    <h2 class="slide__heading reveal" style="font-size:clamp(22px,3.4vw,36px);">What Carries the Argument</h2>
+    <div class="table-wrap reveal">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Source</th><th>Role</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--text);font-family:var(--font-body);font-weight:600;white-space:normal;">Thoughtworks / martinfowler.com</td><td>Reference definition</td><td>Guides vs. sensors, drift sensors, harnessability, Ashby&rsquo;s Law. The reference definition of &ldquo;harness.&rdquo;</td></tr>
+            <tr><td style="color:var(--text);font-family:var(--font-body);font-weight:600;white-space:normal;">OpenAI &ldquo;Harness engineering&rdquo;</td><td>Origin of the term</td><td>Feb 2026. Use with corroboration, never alone.</td></tr>
+            <tr><td style="color:var(--text);font-family:var(--font-body);font-weight:600;white-space:normal;">Stripe &ldquo;Minions&rdquo;</td><td>Proof of environment investment</td><td>Unattended agents, 1,000+ merged PRs/week, pre-warmed devboxes, blueprints.</td></tr>
+            <tr><td style="color:var(--text);font-family:var(--font-body);font-weight:600;white-space:normal;">Anthropic long-running-agent posts</td><td>Backbone of Ch. 20</td><td>Session amnesia, structured handoffs, &ldquo;build harnesses to be dismantled.&rdquo;</td></tr>
+            <tr><td style="color:var(--text);font-family:var(--font-body);font-weight:600;white-space:normal;">LangChain Terminal Bench 2.0</td><td>The isolation experiment</td><td>Same model, harness as only variable: 52.8% &rarr; 66.5%. Answers &ldquo;isn&rsquo;t this just the model?&rdquo;</td></tr>
+            <tr><td style="color:var(--text);font-family:var(--font-body);font-weight:600;white-space:normal;">Vercel tool-deletion result</td><td>Less is more</td><td>Deleting 80% of tools improved results.</td></tr>
+            <tr><td style="color:var(--text);font-family:var(--font-body);font-weight:600;white-space:normal;">Droid CLI agent-readiness <span class="badge badge--warn">needs corroboration</span></td><td>Repo evaluation example</td><td>Evaluating repo structure for agent consumption. Rule 4 applies before load-bearing use.</td></tr>
+            <tr><td style="color:var(--text);font-family:var(--font-body);font-weight:600;white-space:normal;">Shai-Hulud <span class="badge badge--warn">ground factually</span></td><td>Threat class for Ch. 18</td><td>The supply-chain threat class. The skeptic will check.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 24 · COUNTER-EVIDENCE -->
+  <section class="slide slide--content" style="background-image:radial-gradient(ellipse at 15% 15%, var(--ink-dim) 0%, transparent 45%);">
+    <div class="slide__inner">
+      <div>
+        <p class="slide__label reveal">Engage honestly</p>
+        <h2 class="slide__heading reveal">The Counter-Evidence</h2>
+        <ul class="slide__bullets">
+          <li class="reveal"><strong>METR</strong> developer-slowdown study.</li>
+          <li class="reveal"><strong>GitClear</strong> churn data.</li>
+          <li class="reveal"><strong>DORA</strong> trust findings.</li>
+          <li class="reveal">The skeptical reader smells overclaiming instantly — these are engaged, not buried.</li>
+          <li class="reveal">Full synthesis lives in <strong>harness-engineering-research-report.md</strong> (July 2026).</li>
+        </ul>
+      </div>
+      <div class="slide__aside reveal">
+        <svg viewBox="0 0 170 170" width="170" height="170">
+          <line x1="85" y1="20" x2="85" y2="60" stroke="var(--text-dim)" stroke-width="2.5"/>
+          <line x1="30" y1="60" x2="140" y2="60" stroke="var(--text-dim)" stroke-width="2.5"/>
+          <line x1="45" y1="60" x2="45" y2="76" stroke="var(--text-dim)" stroke-width="1.5"/>
+          <line x1="125" y1="60" x2="125" y2="76" stroke="var(--text-dim)" stroke-width="1.5"/>
+          <circle cx="45" cy="92" r="17" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="125" cy="92" r="17" fill="none" stroke="var(--sage)" stroke-width="2"/>
+          <text x="45" y="128" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-dim)">FOR</text>
+          <text x="125" y="128" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-dim)">AGAINST</text>
+          <text x="85" y="156" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-dim)">WEIGH BOTH</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 25 · OPEN QUESTIONS -->
+  <section class="slide slide--content" style="background-image:radial-gradient(ellipse at 80% 20%, var(--accent-dim) 0%, transparent 40%);">
+    <div class="slide__inner slide__inner--flip">
+      <div class="slide__aside reveal">
+        <svg viewBox="0 0 160 160" width="160" height="160">
+          <text x="80" y="105" text-anchor="middle" font-family="Georgia, serif" font-size="120" fill="var(--accent)" opacity="0.15">?</text>
+          <circle cx="80" cy="80" r="66" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity="0.35" stroke-dasharray="5 6"/>
+        </svg>
+      </div>
+      <div>
+        <p class="slide__label reveal">Territory the book may claim</p>
+        <h2 class="slide__heading reveal">Open Questions</h2>
+        <ul class="slide__bullets">
+          <li class="reveal">Harness coherence as it grows.</li>
+          <li class="reveal">Whether silent sensors mean quality — or blindness.</li>
+          <li class="reveal">A mutation-testing equivalent for harness coverage.</li>
+          <li class="reveal">The unsolved behavior-regulation problem.</li>
+          <li class="reveal">What a complete agent-readiness standard looks like.</li>
+          <li class="reveal">Whether the finding &rarr; guide promotion loop can itself be automated safely.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 26 · WORKING CONVENTIONS -->
+  <section class="slide slide--content" style="background-image:radial-gradient(ellipse at 20% 80%, var(--sage-dim) 0%, transparent 40%);">
+    <div class="slide__inner">
+      <div>
+        <p class="slide__label reveal">For Claude, in this project</p>
+        <h2 class="slide__heading reveal">Working Conventions</h2>
+        <ul class="slide__bullets">
+          <li class="reveal"><strong>Search past project conversations</strong> before drafting — research and voice decisions live there.</li>
+          <li class="reveal">The two cutover documents are source material for Parts I&ndash;VI; convert their bullets to prose in the locked voice.</li>
+          <li class="reveal">Deliver chapters as <strong>.md files in outputs</strong>. When in doubt, terser.</li>
+          <li class="reveal">End drafts with a <strong>source note</strong> separating borrowed frame from the book&rsquo;s extensions.</li>
+          <li class="reveal"><strong>Flag structural consequences</strong> of new chapters — never silently absorb them.</li>
+          <li class="reveal">Book Two&rsquo;s map is stale post-cutover; <strong>re-cut it before drafting</strong> anything for Book Two.</li>
+        </ul>
+      </div>
+      <div class="slide__aside reveal">
+        <svg viewBox="0 0 160 160" width="160" height="160">
+          <rect x="35" y="25" width="90" height="110" rx="6" fill="var(--surface)" stroke="var(--sage)" stroke-width="2"/>
+          <path d="M50 55 l10 10 l20 -20" fill="none" stroke="var(--sage)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="90" y1="55" x2="112" y2="55" stroke="var(--text-dim)" stroke-width="2" opacity="0.5"/>
+          <path d="M50 85 l10 10 l20 -20" fill="none" stroke="var(--sage)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="90" y1="85" x2="112" y2="85" stroke="var(--text-dim)" stroke-width="2" opacity="0.5"/>
+          <path d="M50 115 l10 10 l20 -20" fill="none" stroke="var(--sage)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="90" y1="115" x2="112" y2="115" stroke="var(--text-dim)" stroke-width="2" opacity="0.5"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 27 · CLOSING FULL-BLEED -->
+  <section class="slide slide--bleed">
+    <div class="slide__bg slide__bg--gradient"></div>
+    <div class="slide__scrim"></div>
+    <div class="slide__content">
+      <p class="slide__label reveal">The operating principle</p>
+      <h2 class="slide__heading reveal">The work is not complete when the patch lands.<br>It is complete when the system has learned from it.</h2>
+      <p class="slide__subtitle reveal" style="margin-top:14px;">CLAUDE.md &middot; The Harness Books Project &middot; single source of truth</p>
+    </div>
+  </section>
+
+</div><!-- /deck -->
+
+<script>
+  function autoFit() {
+    document.querySelectorAll('.slide--quote blockquote').forEach(function(el) {
+      var len = el.textContent.trim().length;
+      if (len > 100) {
+        var scale = Math.max(0.5, 100 / len);
+        var fs = parseFloat(getComputedStyle(el).fontSize);
+        el.style.fontSize = Math.max(16, Math.round(fs * scale)) + 'px';
+      }
+    });
+  }
+
+  function SlideEngine() {
+    this.deck = document.querySelector('.deck');
+    this.slides = [].slice.call(document.querySelectorAll('.slide'));
+    this.current = 0;
+    this.total = this.slides.length;
+    this.buildChrome();
+    this.bindEvents();
+    this.observe();
+    this.update();
+  }
+  SlideEngine.prototype.buildChrome = function() {
+    var bar = document.createElement('div'); bar.className = 'deck-progress'; document.body.appendChild(bar); this.bar = bar;
+    var dots = document.createElement('div'); dots.className = 'deck-dots'; var self = this;
+    this.slides.forEach(function(_, i) {
+      var d = document.createElement('button'); d.className = 'deck-dot'; d.title = 'Slide ' + (i + 1);
+      d.onclick = function() { self.goTo(i); }; dots.appendChild(d);
+    });
+    document.body.appendChild(dots); this.dots = [].slice.call(dots.children);
+    var ctr = document.createElement('div'); ctr.className = 'deck-counter'; document.body.appendChild(ctr); this.counter = ctr;
+    var hints = document.createElement('div'); hints.className = 'deck-hints';
+    hints.textContent = '← → or scroll to navigate'; document.body.appendChild(hints); this.hints = hints;
+    this.hintTimer = setTimeout(function() { hints.classList.add('faded'); }, 4000);
+  };
+  SlideEngine.prototype.bindEvents = function() {
+    var self = this;
+    document.addEventListener('keydown', function(e) {
+      if (e.target.closest('.table-scroll, input, textarea, [contenteditable]')) return;
+      if (['ArrowDown', 'ArrowRight', ' ', 'PageDown'].indexOf(e.key) > -1) { e.preventDefault(); self.next(); }
+      else if (['ArrowUp', 'ArrowLeft', 'PageUp'].indexOf(e.key) > -1) { e.preventDefault(); self.prev(); }
+      else if (e.key === 'Home') { e.preventDefault(); self.goTo(0); }
+      else if (e.key === 'End') { e.preventDefault(); self.goTo(self.total - 1); }
+      self.fadeHints();
+    });
+    var tY;
+    this.deck.addEventListener('touchstart', function(e) { tY = e.touches[0].clientY; }, { passive: true });
+    this.deck.addEventListener('touchend', function(e) {
+      var dy = tY - e.changedTouches[0].clientY;
+      if (Math.abs(dy) > 50) { dy > 0 ? self.next() : self.prev(); }
+    });
+  };
+  SlideEngine.prototype.observe = function() {
+    var self = this;
+    var obs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          self.current = self.slides.indexOf(entry.target);
+          self.update();
+        }
+      });
+    }, { threshold: 0.5 });
+    this.slides.forEach(function(s) { obs.observe(s); });
+  };
+  SlideEngine.prototype.goTo = function(i) {
+    this.slides[Math.max(0, Math.min(i, this.total - 1))].scrollIntoView({ behavior: 'smooth' });
+  };
+  SlideEngine.prototype.next = function() { if (this.current < this.total - 1) this.goTo(this.current + 1); };
+  SlideEngine.prototype.prev = function() { if (this.current > 0) this.goTo(this.current - 1); };
+  SlideEngine.prototype.update = function() {
+    this.bar.style.width = ((this.current + 1) / this.total * 100) + '%';
+    var c = this.current;
+    this.dots.forEach(function(d, i) { d.classList.toggle('active', i === c); });
+    this.counter.textContent = (this.current + 1) + ' / ' + this.total;
+  };
+  SlideEngine.prototype.fadeHints = function() { clearTimeout(this.hintTimer); this.hints.classList.add('faded'); };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    autoFit();
+    new SlideEngine();
+  });
+</script>
+
+</body>
+</html>
